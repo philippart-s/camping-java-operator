@@ -101,3 +101,26 @@
           subresources:
             status: {}
       ```
+
+## 📝 CRD auto apply
+ - la branche `03-auto-apply-crd` contient le résultat de cette étape
+ - changer le paramétrage permettant la création / automatique de la CRD dans le `application.properties` (cela va permettre de ne plus avoir l'exception):
+      ```properties
+      # set to true to automatically apply CRDs to the cluster when they get regenerated
+      quarkus.operator-sdk.crd.apply=true
+      ```
+ - arrêter et relancer l'opérateur en mode `dev` : `mvn quarkus:dev`:
+      ```bash
+      2022-03-08 13:46:48,219 WARN  [io.qua.ope.dep.OperatorSDKProcessor] (build-20) 'nginxoperatorreconciler' controller is configured to watch all namespaces, this requires a ClusterRoleBinding for which we MUST specify the namespace of the operator ServiceAccount. This can be specified by setting the 'quarkus.kubernetes.namespace' property. However, as this property is not set, we are leaving the namespace blank to be provided by the user by editing the 'nginxoperatorreconciler-cluster-role-binding' ClusterRoleBinding to provide the namespace in which the operator will be deployed.
+      2022-03-08 13:46:48,221 WARN  [io.qua.ope.dep.OperatorSDKProcessor] (build-20) 'nginxoperatorreconciler' controller is configured to validate CRDs, this requires a ClusterRoleBinding for which we MUST specify the namespace of the operator ServiceAccount. This can be specified by setting the 'quarkus.kubernetes.namespace' property. However, as this property is not set, we are leaving the namespace blank to be provided by the user by editing the 'nginxoperatorreconciler-crd-validating-role-binding' ClusterRoleBinding to provide the namespace in which the operator will be deployed.
+      __  ____  __  _____   ___  __ ____  ______ 
+      --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
+      -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
+      --\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
+      ```
+  - vérifier que la CRD a bien été créée : 
+      ```bash
+      kubectl get crds nginxoperators.fr.wilda
+      NAME                      CREATED AT
+      nginxoperators.fr.wilda   2022-03-08T12:46:49Z
+      ```
