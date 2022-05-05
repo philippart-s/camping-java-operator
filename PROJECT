@@ -1,0 +1,5 @@
+domain: fr.wilda
+layout:
+- quarkus.javaoperatorsdk.io/v1-alpha
+projectName: camping-java-operator
+version: "3"
