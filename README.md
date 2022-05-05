@@ -124,3 +124,95 @@
       NAME                      CREATED AT
       nginxoperators.fr.wilda   2022-03-08T12:46:49Z
       ```
+
+## 👋  Hello World with Quarkus
+ - la branche `04-hello-world` contient le résultat de cette étape
+ - ajouter un champ `name` dans `NginxOperatorSpec.java`:
+      ```java
+      public class NginxOperatorSpec {
+          private String name;
+
+          public void setName(String name) {
+              this.name = name;
+          }
+
+          public String getName() {
+              return name;
+          }
+      }
+      ```
+  - vérifier que la CRD a bien été mise à jour:
+      ```bash
+      $ kubectl get crds nginxoperators.fr.wilda -o yaml
+      apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      metadata:
+        creationTimestamp: "2022-03-08T12:46:49Z"
+        generation: 2
+        name: nginxoperators.fr.wilda
+        resourceVersion: "28080830902"
+        uid: acbc5340-292c-4a26-9003-d2d0b9da1683
+      spec:
+        conversion:
+          strategy: None
+        group: fr.wilda
+        names:
+          kind: NginxOperator
+          listKind: NginxOperatorList
+          plural: nginxoperators
+          singular: nginxoperator
+        scope: Namespaced
+        versions:
+        - name: v1
+          schema:
+            openAPIV3Schema:
+              properties:
+                spec:
+                  properties:
+                    name:
+                      type: string
+                  type: object
+      ```
+ - modifier le reconciler `NginxOperatorReconciler.java`:
+    ```java
+    public class NginxOperatorReconciler implements Reconciler<NginxOperator> { 
+      private final KubernetesClient client;
+
+      public NginxOperatorReconciler(KubernetesClient client) {
+        this.client = client;
+      }
+
+      @Override
+      public UpdateControl<NginxOperator> reconcile(NginxOperator resource, Context context) {
+
+        System.out.println(String.format("Hello %s 🎉🎉 !!", resource.getSpec().getName()));
+
+        return UpdateControl.noUpdate();
+      }
+
+      @Override
+      public DeleteControl cleanup(NginxOperator resource, Context context) {
+        System.out.println(String.format("Goodbye %s 😢", resource.getSpec().getName()));
+
+        return Reconciler.super.cleanup(resource, context);
+      }
+    }    
+    ```
+  - créer le namespace `test-helloworld-operator`: `kubectl create ns test-helloworld-operator`
+  - créer la CR `src/test/resources/cr-test-hello-world.yaml` pour tester:
+      ```yaml
+      apiVersion: "fr.wilda/v1"
+      kind: NginxOperator
+      metadata:
+        name: hello-world
+      spec:
+        name: Camping des Speakers 2022
+      ```
+  - créer la CR dans Kubernetes : `kubectl apply -f ./src/test/resources/cr-test-hello-world.yaml -n test-helloworld-operator`
+  - la sortie de l'opérateur devrait afficher le message `Camping des Speakers 2022 🎉🎉 !!`
+  - supprimer la CR : `kubectl delete nginxOperator/hello-world -n test-helloworld-operator`
+  - la sortie de l'opérateur devrait ressembler à cela:
+      ```bash
+      Camping des Speakers 2022 🎉🎉 !!
+      Camping des Speakers 2022 😢 
+      ```

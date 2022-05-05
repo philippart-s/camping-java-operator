@@ -1,0 +1,6 @@
+apiVersion: "fr.wilda/v1"
+kind: NginxOperator
+metadata:
+  name: hello-world
+spec:
+  name: Camping des Speakers 2022
