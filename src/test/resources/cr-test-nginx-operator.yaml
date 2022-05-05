@@ -1,0 +1,7 @@
+apiVersion: "fr.wilda/v1"
+kind: NginxOperator
+metadata:
+  name: nginx-template-operator
+spec:
+  replicaCount: 1
+  port: 30080

@@ -216,3 +216,158 @@
       Camping des Speakers 2022 🎉🎉 !!
       Camping des Speakers 2022 😢 
       ```
+
+## 🤖 Nginx operator
+ - la branche `05-nginx-operator` contient le résultat de cette étape
+ - modifier la classe `NginxOperatorSpec.java`:
+      ```java
+      public class NginxOperatorSpec {
+
+        private Integer replicaCount;
+        private Integer port;
+
+        public void setPort(Integer port) {
+            this.port = port;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
+        public void setReplicaCount(Integer replicaCount) {
+            this.replicaCount = replicaCount;
+        }
+
+        public Integer getReplicaCount() {
+            return replicaCount;
+        }
+     }
+      ```
+ - pour simplifier la création du Pod et du Service pour Nginx on passe par des manifests en YAML.
+    `src/main/resources/k8s/nginx-deployment.yaml`:
+      ```yaml
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        labels:
+          app: nginx
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: nginx
+        template:
+          metadata:
+            labels:
+              app: nginx
+          spec:
+            containers:
+            - name: nginx
+              image: ovhplatform/hello:1.0
+              ports:
+              - containerPort: 80
+      ```
+      `src/main/resources/k8s/nginx-service.yaml`:
+      ```yaml
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx-service
+      spec:
+        type: NodePort
+        selector:
+          app: nginx
+        ports:
+          - port: 80
+            targetPort: 80
+            nodePort: 30080
+       ```
+ - modifier le reconciler `NginxOperatorReconciler.java`:
+    ```java
+    public class NginxOperatorReconciler implements Reconciler<NginxOperator> {
+      private final KubernetesClient client;
+
+      public NginxOperatorReconciler(KubernetesClient client) {
+        this.client = client;
+      }
+
+      @Override
+      public UpdateControl<NginxOperator> reconcile(NginxOperator resource, Context context) {
+
+        System.out.println("🛠️  Create / update Nginx resource operator ! 🛠️");
+
+        String namespace = resource.getMetadata().getNamespace();
+
+        // Load the Nginx deployment
+        Deployment deployment = loadYaml(Deployment.class, "/k8s/nginx-deployment.yaml");
+        // Apply the number of replicas and namespace
+        deployment.getSpec().setReplicas(resource.getSpec().getReplicaCount());
+        deployment.getMetadata().setNamespace(namespace);
+
+        // Create or update Nginx server
+        client.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
+
+        // Create service
+        Service service = loadYaml(Service.class, "/k8s/nginx-service.yaml");
+        Service existingService = client.services().inNamespace(resource.getMetadata().getNamespace()).withName("nginx-service").get();
+        if (existingService == null || !existingService.getSpec().getPorts().get(0).getNodePort().equals(resource.getSpec().getPort())) {
+            service.getSpec().getPorts().get(0).setNodePort(resource.getSpec().getPort());
+            client.services().inNamespace(namespace).createOrReplace(service);
+        }        
+
+        return UpdateControl.noUpdate();
+      }
+
+      @Override
+      public DeleteControl cleanup(NginxOperator resource, Context context) {
+        System.out.println("💀 Delete Nginx resource operator ! 💀");
+
+        client.apps().deployments().inNamespace(resource.getMetadata().getNamespace()).delete();
+        client.services().inNamespace(resource.getMetadata().getNamespace()).withName("nginx-service").delete();
+
+        return Reconciler.super.cleanup(resource, context);
+      }
+
+      /**
+      * Load a YAML file and transform it to a Java class.
+      * 
+      * @param clazz The java class to create
+      * @param yamlPath The yaml file path in the classpath
+      */
+      private <T> T loadYaml(Class<T> clazz, String yamlPath) {
+        try (InputStream is = getClass().getResourceAsStream(yamlPath)) {
+          return Serialization.unmarshal(is, clazz);
+        } catch (IOException ex) {
+          throw new IllegalStateException("Cannot find yaml on classpath: " + yamlPath);
+        }
+      }
+    }
+    ```
+ - créer le namespace `test-nginx-operator`: `kubectl create ns test-nginx-operator`
+ - créer la CR: `src/test/resources/cr-test-nginx-operator.yaml`:
+      ```yaml
+        apiVersion: "fr.wilda/v1"
+        kind: NginxOperator
+        metadata:
+          name: nginx-template-operator
+        spec:
+          replicaCount: 1
+          port: 30080
+      ```
+ - puis l'appliquer sur Kubernetes: `kubectl apply -f ./src/test/resources/cr-test-nginx-operator.yaml -n test-nginx-operator`
+ - l'opérateur devrait créer le pod Nginx et son service:
+      Dans le terminal du quarkus:
+      ```bash
+      🛠️  Create / update Nginx resource operator ! 🛠️
+      ```
+      Dans Kubernetes:
+      ```bash
+      $ kubectl get pod,svc  -n test-nginx-operator
+        NAME                                    READY   STATUS    RESTARTS   AGE
+        pod/nginx-deployment-84c7b56775-khq4g   1/1     Running   0          14s
+
+        NAME                    TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+        service/nginx-service   NodePort   10.3.109.153   <none>        80:30080/TCP   7s
+      ```
+ - tester dans un navigateur ou par un curl l'accès à `http://<node external ip>:30080`, pour récupérer l'IP externe du node : `kubectl get nodes -o wide`
