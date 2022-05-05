@@ -2,4 +2,11 @@ domain: fr.wilda
 layout:
 - quarkus.javaoperatorsdk.io/v1-alpha
 projectName: camping-java-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: fr.wilda
+  kind: NginxOperator
+  version: v1
 version: "3"
