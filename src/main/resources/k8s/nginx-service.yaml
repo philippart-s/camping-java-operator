@@ -2,6 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-service
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: NginxOperator
+      name: ""
+      uid: ""
+  labels:
+    app.kubernetes.io/managed-by: nginx-operator
 spec:
   type: NodePort
   selector:
