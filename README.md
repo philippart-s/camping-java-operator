@@ -350,7 +350,7 @@
         apiVersion: "fr.wilda/v1"
         kind: NginxOperator
         metadata:
-          name: nginx-template-operator
+          name: nginx-camping-operator
         spec:
           replicaCount: 1
           port: 30080
@@ -363,11 +363,49 @@
       ```
       Dans Kubernetes:
       ```bash
-      $ kubectl get pod,svc  -n test-nginx-operator
-        NAME                                    READY   STATUS    RESTARTS   AGE
-        pod/nginx-deployment-84c7b56775-khq4g   1/1     Running   0          14s
+         $ kubectl get pod,svc,nginxoperator  -n test-nginx-operator
 
-        NAME                    TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-        service/nginx-service   NodePort   10.3.109.153   <none>        80:30080/TCP   7s
+         NAME                                    READY   STATUS    RESTARTS   AGE
+         pod/nginx-deployment-84c7b56775-zl7n9   1/1     Running   0          5s
+
+         NAME                    TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+         service/nginx-service   NodePort   10.3.148.88   <none>        80:30080/TCP   5s
+
+         NAME                                            AGE
+         nginxoperator.fr.wilda/nginx-camping-operator   5s      
       ```
  - tester dans un navigateur ou par un curl l'accès à `http://<node external ip>:30080`, pour récupérer l'IP externe du node : `kubectl get nodes -o wide`
+
+## ✏️ Update and delete service
+   - la branche `06-update-cr` contient le résultat de cette étape
+   - changer le port et le nombre de replicas dans la CR `cr-test-nginx-operator.yaml`:
+      ```yaml
+      apiVersion: "fr.wilda/v1"
+      kind: NginxOperator
+      metadata:
+         name: nginx-camping-operator
+      spec:
+         replicaCount: 2
+         port: 30081
+      ```
+   - appliquer la CR: `kubectl apply -f ./src/test/resources/cr-test-nginx-operator.yaml -n test-nginx-operator`
+   - vérifier que le nombre de pods et le port ont bien changés:
+      ```bash
+      $ kubectl get pod,svc  -n test-nginx-operator
+      NAME                                    READY   STATUS    RESTARTS   AGE
+      pod/nginx-deployment-84c7b56775-khq4g   1/1     Running   0          37s
+      pod/nginx-deployment-84c7b56775-l8thw   1/1     Running   0          9s
+
+      NAME                    TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+      service/nginx-service   NodePort   10.3.109.153   <none>        80:30081/TCP   29s
+      ```
+   - tester dans un navigateur ou par un curl l'accès à `http://<node external ip>:30081`
+   - supprimer le service: `kubectl delete svc/nginx-service -n test-nginx-operator`
+   - vérifier qu'il n'est pas recréé:
+      ```bash
+      $ kubectl get svc  -n test-nginx-operator
+
+      No resources found in test-nginx-operator namespace.
+      ```
+   - recréer le service : `kubectl apply -f ./src/main/resources/k8s/nginx-service.yaml -n test-nginx-operator` 
+   - supprimer la CR : `kubectl delete nginxOperator/nginx-camping-operator -n test-nginx-operator`
