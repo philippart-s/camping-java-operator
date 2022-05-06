@@ -492,3 +492,101 @@
       🛠️  Create / update Nginx resource operator ! 🛠️    
     ```
  - supprimer la CR: `kubectl delete nginxOperator/nginx-camping-operator -n test-nginx-operator`
+
+## 🐳  Packaging & deployment to K8s
+ - la branche `08-package-deploy` contient le résultat de cette étape
+ - arrêter le mode dev de Quarkus
+ - modifier le fichier `application.properties`:
+    ```properties
+      quarkus.container-image.build=true
+      quarkus.container-image.push=false
+      quarkus.container-image.group=wilda
+      quarkus.container-image.name=camping-nginx-operator
+
+      # set to true to automatically apply CRDs to the cluster when they get regenerated
+      quarkus.operator-sdk.crd.apply=true
+      # set to true to automatically generate CSV from your code
+      quarkus.operator-sdk.generate-csv=false
+
+      quarkus.kubernetes.namespace=camping-nginx-operator
+    ```
+ - ajouter un fichier `src/main/kubernetes/kubernetes.yml` contenant la définition des _ClusterRole_ / _ClusterRoleBinding_ spécifiques à l'opérateur:
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: service-deployment-cluster-role
+      namespace: camping-nginx-operator
+    rules:
+      - apiGroups:
+        - ""
+        resources:
+        - secrets
+        - serviceaccounts
+        - services  
+        verbs:
+        - "*"
+      - apiGroups:
+        - "apps"
+        verbs:
+          - "*"
+        resources:
+        - deployments
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: service-deployment-cluster-role-binding
+      namespace: camping-nginx-operator
+    roleRef:
+      kind: ClusterRole
+      apiGroup: rbac.authorization.k8s.io
+      name: service-deployment-cluster-role
+    subjects:
+      - kind: ServiceAccount
+        name: camping-nginx-operator
+        namespace: camping-nginx-operator
+    ---
+    ```
+- lancer le packaging : `mvn clean package`
+- vérifier que l'image a bien été générée: : `docker images | grep camping-nginx-operator`:
+    ```bash
+    wilda/camping-nginx-operator          0.0.1-SNAPSHOT         97dac3e852da   5 minutes ago   232MB
+    ```
+- push de l'image : `docker login` && `docker push wilda/camping-nginx-operator:0.0.1-SNAPSHOT`
+- créer le namespace `camping-nginx-operator`: `kubectl create ns camping-nginx-operator`
+- si nécessaire créer la CRD: `kubectl apply -f ./target/kubernetes/nginxoperators.fr.wilda-v1.yml`
+- appliquer le manifest créé : `kubectl apply -f ./target/kubernetes/kubernetes.yml`
+- vérifier que tout va bien:
+    ```bash
+    $ kubectl get pod -n camping-nginx-operator
+
+    NAME                                        READY   STATUS    RESTARTS   AGE
+    camping-nginx-operator-5649886754-5lgd5   1/1     Running   0          2m15s    
+
+    $ kubectl logs camping-nginx-operator-5649886754-5lgd5 -n camping-nginx-operator
+     ```
+      __  ____  __  _____   ___  __ ____  ______ 
+      --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
+      -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
+      --\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
+      2022-05-04 12:28:55,827 INFO  [io.jav.ope.Operator] (main) Registered reconciler: 'nginxoperatorreconciler' for resource: 'class wilda.fr.NginxOperator' for namespace(s): [all namespaces]
+      2022-05-04 12:28:55,859 INFO  [io.qua.ope.run.AppEventListener] (main) Quarkus Java Operator SDK extension 3.0.4 (commit: da80246 on branch: da80246dd6b953c245fcad5a01487db81d55a1bc) built on Wed Mar 02 22:29:51 GMT 2022
+      2022-05-04 12:28:55,860 INFO  [io.jav.ope.Operator] (main) Operator SDK 2.1.1 (commit: 817f8ca) built on Mon Feb 07 10:16:44 GMT 2022 starting...
+      2022-05-04 12:28:55,861 INFO  [io.jav.ope.Operator] (main) Client version: 5.11.2
+      ⚡️ Event !!! ⚡️
+      2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) java-operator-camping 0.0.1-SNAPSHOT on JVM (powered by Quarkus 2.7.3.Final) started in 3.666s. Listening on: http://0.0.0.0:8080
+      2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) Profile prod activated. 
+      2022-05-04 12:28:57,092 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, micrometer, openshift-client, operator-sdk, smallrye-context-propagation, smallrye-health, vertx]
+    ```
+- tester l'opérateur en créant une CR: `kubectl apply -f ./src/test/resources/cr-test-nginx-operator.yaml -n test-nginx-operator`
+- puis en la supprimant: `kubectl delete nginxOperator/nginx-camping-operator -n test-nginx-operator`
+- et constater que tout va bien:
+```bash
+  🛠️  Create / update Nginx resource operator ! 🛠️                                                                                   │
+  🛠️  Create / update Nginx resource operator ! 🛠️                                                                                   │
+  💀 Delete Nginx resource operator ! 💀      
+```
+- supprimer l'opérateur si souhaité: `kubectl delete -f ./target/kubernetes/kubernetes.yml`
+- supprimer les namespaces: `kubectl delete ns test-nginx-operator camping-nginx-operator`
+- supprimer la crd: `kubectl delete crds/nginxoperators.fr.wilda`
