@@ -350,7 +350,7 @@
         apiVersion: "fr.wilda/v1"
         kind: NginxOperator
         metadata:
-          name: nginx-template-operator
+          name: nginx-camping-operator
         spec:
           replicaCount: 1
           port: 30080
@@ -363,11 +363,14 @@
       ```
       Dans Kubernetes:
       ```bash
-      $ kubectl get pod,svc  -n test-nginx-operator
+      $ kubectl get pod,svc,nginxoperator  -n test-nginx-operator
         NAME                                    READY   STATUS    RESTARTS   AGE
         pod/nginx-deployment-84c7b56775-khq4g   1/1     Running   0          14s
 
         NAME                    TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
         service/nginx-service   NodePort   10.3.109.153   <none>        80:30080/TCP   7s
+
+        NAME                                            AGE
+        nginxoperator.fr.wilda/nginx-template-operator   5s
       ```
  - tester dans un navigateur ou par un curl l'accès à `http://<node external ip>:30080`, pour récupérer l'IP externe du node : `kubectl get nodes -o wide`
