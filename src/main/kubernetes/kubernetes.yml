@@ -9,7 +9,7 @@ rules:
     resources:
     - secrets
     - serviceaccounts
-    - services  
+    - services
     verbs:
     - "*"
   - apiGroups:

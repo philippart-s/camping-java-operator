@@ -1,0 +1,11 @@
+tasks:
+  - name: Init K8s context
+    command:  > 
+      mkdir ~/.kube/ &&
+      echo $K8S_CTX | base64 -d > ~/.kube/config &&
+      mkdir ~/.docker/ &&
+      echo $DOCKER_CRED | base64 -d > ~/.docker/config.json &&
+      brew install kubectl k9s
+vscode:
+  extensions:
+    - redhat.java 
