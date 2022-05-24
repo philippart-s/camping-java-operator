@@ -18,6 +18,7 @@
     │       └── resources
     │           └── application.properties
     ```
+ - ⚠️ Au moment de l'écriture de ce tuto il est nécessaire de changer la version de la propriété `quarkus.version` à `2.7.5.Final` dans le `pom.xml` généré
  - supprimer le `-operator` dans le nom du fichier `application.properties`:
     ```yaml
         quarkus.container-image.build=true
