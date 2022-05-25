@@ -283,7 +283,7 @@
           - port: 80
             targetPort: 80
             nodePort: 30080
-       ```
+      ```
  - modifier le reconciler `NginxOperatorReconciler.java`:
     ```java
     public class NginxOperatorReconciler implements Reconciler<NginxOperator> {
@@ -566,19 +566,20 @@
     camping-nginx-operator-5649886754-5lgd5   1/1     Running   0          2m15s    
 
     $ kubectl logs camping-nginx-operator-5649886754-5lgd5 -n camping-nginx-operator
-     ```
-      __  ____  __  _____   ___  __ ____  ______ 
-      --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
-      -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
-      --\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
-      2022-05-04 12:28:55,827 INFO  [io.jav.ope.Operator] (main) Registered reconciler: 'nginxoperatorreconciler' for resource: 'class wilda.fr.NginxOperator' for namespace(s): [all namespaces]
-      2022-05-04 12:28:55,859 INFO  [io.qua.ope.run.AppEventListener] (main) Quarkus Java Operator SDK extension 3.0.4 (commit: da80246 on branch: da80246dd6b953c245fcad5a01487db81d55a1bc) built on Wed Mar 02 22:29:51 GMT 2022
-      2022-05-04 12:28:55,860 INFO  [io.jav.ope.Operator] (main) Operator SDK 2.1.1 (commit: 817f8ca) built on Mon Feb 07 10:16:44 GMT 2022 starting...
-      2022-05-04 12:28:55,861 INFO  [io.jav.ope.Operator] (main) Client version: 5.11.2
-      ⚡️ Event !!! ⚡️
-      2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) java-operator-camping 0.0.1-SNAPSHOT on JVM (powered by Quarkus 2.7.3.Final) started in 3.666s. Listening on: http://0.0.0.0:8080
-      2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) Profile prod activated. 
-      2022-05-04 12:28:57,092 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, micrometer, openshift-client, operator-sdk, smallrye-context-propagation, smallrye-health, vertx]
+    ```
+    ```bash
+    __  ____  __  _____   ___  __ ____  ______ 
+    --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
+    -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
+    --\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
+    2022-05-04 12:28:55,827 INFO  [io.jav.ope.Operator] (main) Registered reconciler: 'nginxoperatorreconciler' for resource: 'class wilda.fr.NginxOperator' for namespace(s): [all namespaces]
+    2022-05-04 12:28:55,859 INFO  [io.qua.ope.run.AppEventListener] (main) Quarkus Java Operator SDK extension 3.0.4 (commit: da80246 on branch: da80246dd6b953c245fcad5a01487db81d55a1bc) built on Wed Mar 02 22:29:51 GMT 2022
+    2022-05-04 12:28:55,860 INFO  [io.jav.ope.Operator] (main) Operator SDK 2.1.1 (commit: 817f8ca) built on Mon Feb 07 10:16:44 GMT 2022 starting...
+    2022-05-04 12:28:55,861 INFO  [io.jav.ope.Operator] (main) Client version: 5.11.2
+    ⚡️ Event !!! ⚡️
+    2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) java-operator-camping 0.0.1-SNAPSHOT on JVM (powered by Quarkus 2.7.3.Final) started in 3.666s. Listening on: http://0.0.0.0:8080
+    2022-05-04 12:28:57,091 INFO  [io.quarkus] (main) Profile prod activated. 
+    2022-05-04 12:28:57,092 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, kubernetes-client, micrometer, openshift-client, operator-sdk, smallrye-context-propagation, smallrye-health, vertx]
     ```
 - tester l'opérateur en créant une CR: `kubectl apply -f ./src/test/resources/cr-test-nginx-operator.yaml -n test-nginx-operator`
 - puis en la supprimant: `kubectl delete nginxOperator/nginx-camping-operator -n test-nginx-operator`
