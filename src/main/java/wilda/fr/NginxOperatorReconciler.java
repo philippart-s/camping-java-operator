@@ -27,11 +27,11 @@ public class NginxOperatorReconciler implements Reconciler<NginxOperator>, Event
 
   @Override
   public List<EventSource> prepareEventSources(EventSourceContext<NginxOperator> context) {
-     System.out.println("⚡️ Event !!! ⚡️");
-     SharedIndexInformer<Service> deploymentInformer = client.services().inAnyNamespace()
+     System.out.println("👀 Create watcher on service 👀");
+     SharedIndexInformer<Service> serviceInformer = client.services().inAnyNamespace()
         .withLabel("app.kubernetes.io/managed-by", "nginx-operator").runnableInformer(0);
 
-     return List.of(new InformerEventSource<>(deploymentInformer, Mappers.fromOwnerReference()));
+     return List.of(new InformerEventSource<>(serviceInformer, Mappers.fromOwnerReference()));
   }
 
   @Override
