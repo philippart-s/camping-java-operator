@@ -562,12 +562,12 @@
 - appliquer le manifest créé : `kubectl apply -f ./target/kubernetes/kubernetes.yml`
 - vérifier que tout va bien:
     ```bash
-    $ kubectl get pod -n camping-nginx-operator
+    $ kubectl get pod -n camping-nginx-operator --watch
 
     NAME                                        READY   STATUS    RESTARTS   AGE
     camping-nginx-operator-5649886754-5lgd5   1/1     Running   0          2m15s    
 
-    $ kubectl logs camping-nginx-operator-5649886754-5lgd5 -n camping-nginx-operator
+    $ kubectl logs camping-nginx-operator-5649886754-5lgd5 -n camping-nginx-operator -f
      ```
       __  ____  __  _____   ___  __ ____  ______ 
       --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
