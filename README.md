@@ -591,5 +591,5 @@
   💀 Delete Nginx resource operator ! 💀      
 ```
 - supprimer l'opérateur si souhaité: `kubectl delete -f ./target/kubernetes/kubernetes.yml`
-- supprimer les namespaces: `kubectl delete ns test-nginx-operator camping-nginx-operator`
+- supprimer les namespaces: `kubectl delete ns test-nginx-operator camping-nginx-operator test-helloworld-operator`
 - supprimer la crd: `kubectl delete crds/nginxoperators.fr.wilda`
